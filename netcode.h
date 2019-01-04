@@ -124,6 +124,7 @@ struct netcode_client_config_t
     int override_send_and_receive;
     void (*send_packet_override)(void*,struct netcode_address_t*,NETCODE_CONST uint8_t*,int);
     int (*receive_packet_override)(void*,struct netcode_address_t*,uint8_t*,int);
+    int (*intercept)(void*,struct netcode_address_t*,uint8_t*,int);
 };
 
 void netcode_default_client_config( struct netcode_client_config_t * config );
@@ -166,6 +167,10 @@ uint16_t netcode_client_get_port( struct netcode_client_t * client );
 
 struct netcode_address_t * netcode_client_server_address( struct netcode_client_t * client );
 
+uint64_t netcode_client_get_ipv4_socket( struct netcode_client_t * client );
+
+uint64_t netcode_client_get_ipv6_socket( struct netcode_client_t * client );
+
 int netcode_generate_connect_token( int num_server_addresses, 
                                     NETCODE_CONST char ** public_server_addresses, 
                                     NETCODE_CONST char ** internal_server_addresses, 
@@ -190,6 +195,7 @@ struct netcode_server_config_t
     int override_send_and_receive;
     void (*send_packet_override)(void*,struct netcode_address_t*,NETCODE_CONST uint8_t*,int);
     int (*receive_packet_override)(void*,struct netcode_address_t*,uint8_t*,int);
+    int (*intercept)(void*,struct netcode_address_t*,uint8_t*,int);
 };
 
 void netcode_default_server_config( struct netcode_server_config_t * config );
@@ -239,6 +245,10 @@ int netcode_server_client_loopback( struct netcode_server_t * server, int client
 void netcode_server_process_loopback_packet( struct netcode_server_t * server, int client_index, NETCODE_CONST uint8_t * packet_data, int packet_bytes, uint64_t packet_sequence );
 
 uint16_t netcode_server_get_port( struct netcode_server_t * server );
+
+uint64_t netcode_server_get_ipv4_socket( struct netcode_server_t * server );
+
+uint64_t netcode_server_get_ipv6_socket( struct netcode_server_t * server );
 
 void netcode_log_level( int level );
 

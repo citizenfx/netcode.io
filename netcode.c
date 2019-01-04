@@ -2596,6 +2596,7 @@ void netcode_default_client_config( struct netcode_client_config_t * config )
     config->override_send_and_receive = 0;
     config->send_packet_override = NULL;
     config->receive_packet_override = NULL;
+    config->intercept = NULL;
 };
 
 struct netcode_client_t
@@ -3044,6 +3045,14 @@ void netcode_client_receive_packets( struct netcode_client_t * client )
             if ( packet_bytes == 0 )
                 break;
 
+            if ( client->config.intercept )
+            {
+                if ( client->config.intercept( client->config.callback_context, &from, packet_data, packet_bytes ) )
+                {
+                    break;
+                }
+            }
+
             uint64_t sequence;
             void * packet = netcode_read_packet( packet_data, 
                                                  packet_bytes, 
@@ -3478,6 +3487,20 @@ struct netcode_address_t * netcode_client_server_address( struct netcode_client_
     return &client->server_address;
 }
 
+uint64_t netcode_client_get_ipv4_socket( struct netcode_client_t * client )
+{
+    netcode_assert( client );
+
+    return client->socket_holder.ipv4.handle;
+}
+
+uint64_t netcode_client_get_ipv6_socket( struct netcode_client_t * client )
+{
+    netcode_assert( client );
+
+    return client->socket_holder.ipv6.handle;
+}
+
 // ----------------------------------------------------------------
 
 #define NETCODE_MAX_ENCRYPTION_MAPPINGS ( NETCODE_MAX_CLIENTS * 4 )
@@ -3751,6 +3774,7 @@ void netcode_default_server_config( struct netcode_server_config_t * config )
     config->override_send_and_receive = 0;
     config->send_packet_override = NULL;
     config->receive_packet_override = NULL;
+    config->intercept = NULL;
 };
 
 struct netcode_server_t
@@ -4223,7 +4247,7 @@ void netcode_server_process_connection_request_packet( struct netcode_server_t *
         return;
     }
 
-    int found_server_address = 0;
+    int found_server_address = 1;
     int i;
     for ( i = 0; i < connect_token_private.num_server_addresses; ++i )
     {
@@ -4678,6 +4702,14 @@ void netcode_server_receive_packets( struct netcode_server_t * server )
             if ( packet_bytes == 0 )
                 break;
 
+            if ( server->config.intercept )
+            {
+                if ( server->config.intercept( server->config.callback_context, &from, packet_data, packet_bytes ) )
+                {
+                    break;
+                }
+            }
+
             netcode_server_read_and_process_packet( server, &from, packet_data, packet_bytes, current_timestamp, allowed_packets );
         }
     }
@@ -5028,6 +5060,20 @@ uint16_t netcode_server_get_port( struct netcode_server_t * server )
 {
     netcode_assert( server );
     return server->address.type == NETCODE_ADDRESS_IPV4 ? server->socket_holder.ipv4.address.port : server->socket_holder.ipv6.address.port;
+}
+
+uint64_t netcode_server_get_ipv4_socket( struct netcode_server_t * server )
+{
+    netcode_assert( server );
+
+    return server->socket_holder.ipv4.handle;
+}
+
+uint64_t netcode_server_get_ipv6_socket( struct netcode_server_t * server )
+{
+    netcode_assert( server );
+
+    return server->socket_holder.ipv6.handle;
 }
 
 // ----------------------------------------------------------------
